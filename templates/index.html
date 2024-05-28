@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Language Recognition</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+
+      #container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+      }
+
+      #video {
+        width: 100%;
+        height: auto;
+        margin-bottom: 20px;
+      }
+
+      #prediction {
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <h1>Sign Language Recognition</h1>
+      <video id="video" autoplay></video>
+      <p id="prediction">Predicted sign:</p>
+    </div>
+
+    <script>
+      const video = document.getElementById("video");
+      const predictionDisplay = document.getElementById("prediction");
+
+      // Get webcam stream and display video
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((error) => {
+          console.error("Error accessing webcam:", error);
+        });
+
+      // Function to send image data to backend for prediction
+      async function predictSign(imageData) {
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            body: imageData,
+          });
+          const data = await response.json();
+          predictionDisplay.textContent =
+            "Predicted sign: " + data.predicted_sign;
+        } catch (error) {
+          console.error("Error predicting sign:", error);
+        }
+      }
+
+      // Capture and send each frame for prediction
+      setInterval(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/jpeg");
+        predictSign(imageData);
+      }, 1000); // Adjust the interval as needed
+    </script>
+  </body>
+</html>
